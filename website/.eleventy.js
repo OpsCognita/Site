@@ -29,7 +29,7 @@ module.exports = function(eleventyConfig) {
   return {
     markdownTemplateEngine: "njk",
     htmlTemplateEngine: "njk",
-    pathPrefix: "/OpsCognita/",
+    pathPrefix: "/Site/",
     dir: {
       input: ".",
       output: "../docs",
