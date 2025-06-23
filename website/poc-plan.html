@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive PoC Plan | OpsCognita</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Cool Tech" - A clean palette using slate grays, pure white, and a vibrant indigo accent for a modern, professional tech aesthetic. -->
+    <!-- Application Structure Plan: The application is structured as a narrative journey through the PoC plan. It begins with the high-level "Core Question" to set the context. It then breaks down the "Big Idea" into three digestible, interactive component cards. The centerpiece is the interactive 2-month timeline, allowing users to toggle between phases to see detailed tasks and a dynamic chart showing the effort distribution. This structure turns a static timeline into an explorable plan, making it easier for stakeholders to grasp the focus and deliverables of each phase. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: The core components of the solution (Cost Engine, AI, GitOps). Goal: Clarify the architecture. Viz: Three distinct HTML/CSS cards with icons. Interaction: Subtle hover effects to draw attention. Justification: More engaging and scannable than a paragraph of text.
+        - Report Info: The 2-month plan details. Goal: Show phased execution. Viz: An interactive tabbed section for the timeline. Interaction: Clicking "Month 1" or "Month 2" updates the task list and a companion Chart.js doughnut chart. Justification: Allows users to focus on one phase at a time while visually understanding the shift in work focus (e.g., from foundational work to AI integration).
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .tab-btn.active { background-color: #4f46e5; color: #ffffff; }
+        .tab-btn { transition: all 0.2s ease-in-out; }
+        .chart-container { position: relative; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto; height: 300px; max-height: 40vh; }
+        .task-list li, .criteria-list li { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%234f46e5'%3E%3Cpath fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd' /%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 0 5px; background-size: 1.25em; padding-left: 1.75em; }
+        .content-fade { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .flow-step { border-left: 3px solid #e2e8f0; }
+        .flow-step:hover { border-left-color: #4f46e5; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="main-container max-w-5xl mx-auto my-8 md:my-12 p-6 md:p-10 bg-white rounded-2xl shadow-xl">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 mb-2">PoC Plan: AI Agent Model</h1>
+            <p class="text-lg text-indigo-600 font-semibold">Autonomous IaC Modification with Tool Use</p>
+        </header>
+
+        <section id="core-question" class="mb-12 bg-slate-50 border border-slate-200 p-8 rounded-xl text-center">
+            <h2 class="text-xl font-bold text-slate-700 mb-2">The PoC's Core Question</h2>
+            <p class="text-2xl font-semibold text-slate-800 leading-tight">Can an AI Agent, given a set of tools, autonomously navigate a Git repository, identify the correct file, and modify it to create a valid Pull Request?</p>
+        </section>
+        
+        <section id="big-idea" class="mb-16">
+            <h2 class="text-3xl font-bold text-center text-slate-800 mb-8">Core Agent Components</h2>
+            <div class="grid md:grid-cols-3 gap-6 text-center">
+                <div class="p-6 rounded-lg border border-slate-200 hover:shadow-lg transition-shadow">
+                    <div class="text-4xl mb-3">🛠️</div>
+                    <h3 class="font-bold text-lg mb-2">1. AI Agent with Tools</h3>
+                    <p class="text-sm text-slate-600">The core of the system is an LLM given access to tools like `list_files`, `read_file`, and `write_file` to interact with the repository.</p>
+                </div>
+                <div class="p-6 rounded-lg border border-slate-200 hover:shadow-lg transition-shadow">
+                    <div class="text-4xl mb-3">🔁</div>
+                    <h3 class="font-bold text-lg mb-2">2. Orchestration Loop</h3>
+                    <p class="text-sm text-slate-600">The Python script orchestrates a conversation, executing the tool functions the AI calls for and feeding the results back to the AI.</p>
+                </div>
+                <div class="p-6 rounded-lg border border-slate-200 hover:shadow-lg transition-shadow">
+                    <div class="text-4xl mb-3">🚀</div>
+                    <h3 class="font-bold text-lg mb-2">3. Automated Pull Request</h3>
+                    <p class="text-sm text-slate-600">Once the AI determines the modification is complete, the script uses the GitHub API to commit the changes and open a PR.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture-flow" class="mb-16">
+            <h2 class="text-3xl font-bold text-center text-slate-800 mb-8">Detailed Architecture & Interaction Flow</h2>
+            <div class="bg-slate-50 p-6 md:p-8 rounded-xl border border-slate-200">
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-slate-700 mb-4">Component Roles</h3>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm">
+                        <div class="bg-white p-4 rounded-lg shadow-sm"><strong>Operator (CLI):</strong> Initiates the process.</div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm"><strong>PoC Script (Orchestrator):</strong> Executes tool calls from the AI.</div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm"><strong>AI Agent (Gemini API):</strong> The "brain" that decides which tools to use to achieve its goal.</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-slate-700 mb-4">Agent Interaction Loop</h3>
+                    <div class="space-y-4">
+                        <div class="flow-step p-4 transition"><strong>Step 1: Initialization.</strong> The `Operator` runs the `PoC Script`, providing the high-level goal from `recommendation.json`. The script clones the repo.</div>
+                        <div class="flow-step p-4 transition"><strong>Step 2: Initial Prompt.</strong> The script asks the `AI Agent`: "Based on this goal and these available tools (`list_files`, `read_file`, `write_file`), what is your first step?"</div>
+                        <div class="flow-step p-4 transition"><strong>Step 3: AI Tool Call.</strong> The `AI Agent` responds with a request to call a function, e.g., `list_files(directory='/')`.</div>
+                        <div class="flow-step p-4 transition"><strong>Step 4: Script Execution.</strong> The `PoC Script` executes the `list_files` command on the local filesystem and captures the output (the list of files).</div>
+                        <div class="flow-step p-4 transition"><strong>Step 5: Feedback Loop.</strong> The script sends the function's output back to the `AI Agent` and asks, "Here is the result. What is your next step?"</div>
+                        <div class="flow-step p-4 transition"><strong>Step 6: Iteration.</strong> Steps 3-5 repeat. The AI might now ask to `read_file('infra/nodes.tf')`. The script executes this, returns the file content, and the loop continues until the AI has all necessary information.</div>
+                        <div class="flow-step p-4 transition"><strong>Step 7: Final Action.</strong> The AI eventually generates the final, modified code and requests a `write_file` call. After this succeeds, it signals that its task is complete.</div>
+                        <div class="flow-step p-4 transition"><strong>Step 8: Git Automation.</strong> The `PoC Script` breaks the loop and proceeds to use the `GitHub API` to create a new branch, commit the change, and open a pull request.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="poc-input" class="mb-16">
+            <h2 class="text-3xl font-bold text-center text-slate-800 mb-8">PoC Input: The `recommendation.json` File</h2>
+            <p class="text-center text-slate-600 max-w-3xl mx-auto mb-8">The script is driven by a `recommendation.json` file. This file provides the **high-level goal** for the AI, crucially **without a file path**, forcing the AI to perform the discovery task.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-700 mb-2 text-center">Example 1: Terraform Node Sizing</h3>
+                    <pre class="bg-slate-800 text-white text-sm rounded-lg p-4 overflow-x-auto"><code>{
+  "type": "terraform",
+  "resource_type": "aws_eks_node_group",
+  "resource_name": "general_purpose_nodes",
+  "parameter_to_change": "instance_types",
+  "new_value": ["t3.large"],
+  "commit_message": "feat(rightsizing): Update node group to t3.large"
+}</code></pre>
+                </div>
+                 <div>
+                    <h3 class="font-bold text-lg text-slate-700 mb-2 text-center">Example 2: Helm Application Sizing</h3>
+                    <pre class="bg-slate-800 text-white text-sm rounded-lg p-4 overflow-x-auto"><code>{
+  "type": "helm",
+  "application_name": "my-app",
+  "parameter_path": "replica.resources.requests.cpu",
+  "new_value": "250m",
+  "commit_message": "feat(rightsizing): Adjust my-app CPU request"
+}
+
+</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="timeline" class="mb-16">
+            <h2 class="text-3xl font-bold text-center text-slate-800 mb-8">Phased Execution Plan</h2>
+            
+            <div class="flex justify-center mb-8">
+                <div class="flex space-x-1 bg-slate-100 p-1 rounded-full">
+                    <button class="tab-btn px-6 py-2 text-sm font-semibold rounded-full active" data-phase="1">Phase 1</button>
+                    <button class="tab-btn px-6 py-2 text-sm font-semibold rounded-full" data-phase="2">Phase 2</button>
+                </div>
+            </div>
+
+            <div id="timeline-content" class="grid lg:grid-cols-2 gap-8 items-center bg-slate-50 p-12 rounded-xl border border-slate-200">
+                <div id="phase-details" class="content-fade">
+                    <h3 id="phase-title" class="text-2xl font-bold text-slate-800 mb-4"></h3>
+                    <ul id="phase-tasks" class="task-list space-y-3 text-slate-700">
+                    </ul>
+                </div>
+                <div class="chart-container content-fade">
+                    <canvas id="focusChart"></canvas>
+                    <div id="chart-title" class="text-center mt-4 text-lg font-bold text-slate-700"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="success-criteria" class="mb-16">
+            <h2 class="text-3xl font-bold text-center text-slate-800 mb-8">Clear Success Criteria</h2>
+            <div class="bg-indigo-600 text-white p-8 rounded-xl shadow-lg">
+                <ul class="criteria-list space-y-3 font-medium">
+                    <li style="background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'%23ffffff\'%3E%3Cpath fill-rule=\'evenodd\' d=\'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z\' clip-rule=\'evenodd\' /%3E%3C/svg%3E');">The agent successfully navigates the repo and identifies the correct file to modify.</li>
+                    <li style="background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'%23ffffff\'%3E%3Cpath fill-rule=\'evenodd\' d=\'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z\' clip-rule=\'evenodd\' /%3E%3C/svg%3E');">A new, open pull request is successfully created in the target GitHub repository.</li>
+                    <li style="background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'%23ffffff\'%3E%3Cpath fill-rule=\'evenodd\' d=\'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z\' clip-rule=\'evenodd\' /%3E%3C/svg%3E');">The PR's diff shows ONLY the intended change and contains no other incorrect modifications.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="next-steps">
+            <h2 class="text-3xl font-bold text-center text-slate-800 mb-8">Next Steps & Extended PoC: The Recommendation Engine</h2>
+            <p class="text-center text-slate-600 max-w-3xl mx-auto mb-8">This PoC validates the <strong>"How"</strong>: the agent's ability to execute a change. The next logical step is to automate the <strong>"What"</strong> and <strong>"Why"</strong> by integrating a recommendation source.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-slate-50 border border-slate-200 p-6 rounded-lg">
+                    <h3 class="font-bold text-lg text-slate-700 mb-2">Path A: Integrate Open-Source Engine</h3>
+                    <p class="text-sm text-slate-600 mb-4">The fastest path to an end-to-end solution. A new "Adapter" component will query the Kubecost or OpenCost API, translating its output into our standard `recommendation.json` format for the agent to use.</p>
+                    <ul class="text-sm space-y-1">
+                        <li>✅ Leverages a battle-tested engine.</li>
+                        <li>✅ Grounded in real cluster metrics.</li>
+                        <li>✅ Demonstrates full pipeline value quickly.</li>
+                    </ul>
+                </div>
+                 <div class="bg-slate-50 border border-slate-200 p-6 rounded-lg">
+                    <h3 class="font-bold text-lg text-slate-700 mb-2">Path B: Custom AI Model</h3>
+                    <p class="text-sm text-slate-600 mb-4">A more advanced, flexible approach. We would build a custom AI model that analyzes raw metrics (e.g., from Prometheus) and directly generates the `recommendation.json` file.</p>
+                     <ul class="text-sm space-y-1">
+                        <li>✅ Full control over recommendation logic.</li>
+                        <li>✅ No need for a separate adapter.</li>
+                        <li>❌ Requires significant R&D effort.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 text-center text-sm text-slate-600 bg-amber-100/60 border border-amber-200 p-4 rounded-md">
+                <strong>Note:</strong> The recommended next step is <strong>Path A</strong> to validate the complete end-to-end workflow. <strong>Path B</strong> represents a powerful long-term vision to be explored after the initial integration is proven.
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="text-center p-8 text-slate-500 text-sm">
+        <p>This document outlines a simplified Proof of Concept plan and does not represent a commitment to build.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const timelineData = {
+                '1': {
+                    title: "Agent & Tool Definition",
+                    tasks: [
+                        "Define the 'tools' for the AI as Python functions (e.g., `list_files`, `read_file`).",
+                        "Structure the initial prompt to inform the AI of its goal and available tools.",
+                        "Implement the main orchestration loop that sends prompts and processes AI responses.",
+                        "Handle the AI's first few tool calls, like listing directories and reading a file."
+                    ],
+                    chartData: {
+                        labels: ["Agent Logic", "Tool Functions"],
+                        values: [60, 40],
+                        colors: ["#6366f1", "#a5b4fc"],
+                        title: "Focus: Agent Orchestration"
+                    }
+                },
+                '2': {
+                    title: 'Final Action & Git Automation',
+                    tasks: [
+                        "Implement the `write_file` tool to allow the AI to save its changes.",
+                        "Enable the AI to signal when its task is complete, breaking the loop.",
+                        "Integrate the GitHub API client within the script.",
+                        "Code the final sequence: create branch, commit, push, and create pull request."
+                    ],
+                    chartData: {
+                        labels: ["Git Automation", "Agent Finalization"],
+                        values: [70, 30],
+                        colors: ["#4f46e5", "#c7d2fe"],
+                        title: "Focus: GitOps & Completion"
+                    }
+                }
+            };
+
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const phaseTitleEl = document.getElementById('phase-title');
+            const phaseTasksEl = document.getElementById('phase-tasks');
+            const phaseDetailsEl = document.getElementById('phase-details');
+            const chartContainerEl = document.querySelector('.chart-container');
+            const chartTitleEl = document.getElementById('chart-title');
+
+            let focusChart;
+
+            function createOrUpdateChart(data) {
+                const chartCtx = document.getElementById('focusChart').getContext('2d');
+                if (focusChart) {
+                    focusChart.data.labels = data.labels;
+                    focusChart.data.datasets[0].data = data.values;
+                    focusChart.data.datasets[0].backgroundColor = data.colors;
+                    focusChart.update();
+                } else {
+                    focusChart = new Chart(chartCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                data: data.values,
+                                backgroundColor: data.colors,
+                                borderWidth: 4,
+                                borderColor: '#f8fafc'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '70%',
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            return `${context.label}: ${context.raw}%`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                chartTitleEl.textContent = data.title;
+            }
+
+            function updateTimelineContent(phase) {
+                const data = timelineData[phase];
+                
+                phaseDetailsEl.classList.remove('content-fade');
+                chartContainerEl.classList.remove('content-fade');
+                
+                void phaseDetailsEl.offsetWidth; 
+
+                phaseTitleEl.textContent = `Phase ${phase}: ${data.title}`;
+                phaseTasksEl.innerHTML = data.tasks.map(task => `<li>${task}</li>`).join('');
+                createOrUpdateChart(data.chartData);
+
+                phaseDetailsEl.classList.add('content-fade');
+                chartContainerEl.classList.add('content-fade');
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    updateTimelineContent(button.dataset.phase);
+                });
+            });
+
+            updateTimelineContent('1');
+        });
+    </script>
+</body>
+</html>
